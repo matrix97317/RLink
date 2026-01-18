@@ -1,6 +1,8 @@
 # RLink
 
-https://via.placeholder.com/800x200?text=RLink+Distributed+RL+Communication+Layer
+<div align="center">
+    <img src="./assets/logo.png" alt="项目Logo" width="150"/>
+</div>
 
 RLink is a lightweight, high-performance communication layer specifically designed for distributed reinforcement learning systems. It enables seamless data exchange between actors (environment interaction) and learners (model training), decoupling sampling from training to scale your RL experiments efficiently.
 
@@ -149,6 +151,5 @@ RLink is released under the MIT License. See LICENSE for details.
 
 🐦 Twitter Updates
 
-### 🌟 Star History
-https://api.star-history.com/svg?repos=your-org/rlink&type=Date
+
 
