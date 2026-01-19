@@ -91,6 +91,8 @@ build:
 upload:
 	${PIPRUN} python -m twine upload dist/*
 
+autofix:
+	${PIPRUN} autopep8 --in-place --recursive --aggressive .
 # Generate docs.
 docs:
 	${PIPRUN} python -m sphinx.cmd.build docs public

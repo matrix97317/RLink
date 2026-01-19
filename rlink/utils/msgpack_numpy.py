@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """RLink Utils."""
+
 import functools
 
 import msgpack

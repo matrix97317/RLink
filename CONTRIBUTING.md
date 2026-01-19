@@ -68,7 +68,7 @@ To set up your local environment to develop RLink:
     ```bash
     git clone [https://github.com/matrix97317/RLink.git](https://github.com/matrix97317/RLink.git)
     cd RLink
-    
+
     ```
 
 2.  Install dependencies:
