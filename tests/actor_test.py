@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """RLink Actor Tests."""
+
 import time
 
 import numpy as np

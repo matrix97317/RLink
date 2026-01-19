@@ -195,8 +195,7 @@ class RLinkLearner:
                 actor_id = obs.get("actor_id", "unknown_actor")
                 data_size = obs.get("data_size", 0)
 
-                print(
-                    f"Data probe from actor {actor_id}, size: {data_size} bytes")
+                print(f"Data probe from actor {actor_id}, size: {data_size} bytes")
 
                 # 更新actor信息
                 self._actor_info[actor_id] = {
@@ -223,8 +222,7 @@ class RLinkLearner:
                 return StreamingResponse(
                     io.BytesIO(packed_response),
                     media_type="application/msgpack",
-                    headers={"X-Actor-ID": actor_id,
-                             "X-Timestamp": str(request_time)},
+                    headers={"X-Actor-ID": actor_id, "X-Timestamp": str(request_time)},
                 )
 
             except Exception as e:
@@ -283,8 +281,7 @@ class RLinkLearner:
 
                 # 启动UCXX服务器
                 if self._enable_ucxx:
-                    tasks.append(self._loop.create_task(
-                        self._start_ucxx_server()))
+                    tasks.append(self._loop.create_task(self._start_ucxx_server()))
                 # 运行所有任务
                 self._loop.run_until_complete(asyncio.gather(*tasks))
 
