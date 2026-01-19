@@ -30,3 +30,4 @@ h5py
 msgpack
 fastapi
 types-requests
+ucxx-cu12

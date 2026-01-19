@@ -111,35 +111,14 @@ Hybrid Cloud/Edge Training – Deploy actors and learners across different infra
 ### 📈 Performance Benchmarks
 
 ### 🔮 Roadmap
-C++ backend implementation
-
-Rust backend implementation
-
-WebSocket support for browser-based actors
-
-Advanced load balancing
-
-Protocol buffers serialization
-
-Kubernetes operator for orchestration
 
 ### 🤝 Contributing
 
-We welcome contributions! Please see our Contributing Guidelines for details.
-
-Fork the repository
-
-Create a feature branch
-
-Commit your changes
-
-Push to the branch
-
-Open a Pull Request
+We welcome contributions! Please see our Contributing Guidelines for details. [CONTRIBUTING](./CONTRIBUTING.md)
 
 ### 📄 License
 
-RLink is released under the MIT License. See LICENSE for details.
+RLink is released under the MIT License. See LICENSE for details [LICENSE](./LICENSE).
 
 📞 Support & Community
 
