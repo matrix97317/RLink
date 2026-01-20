@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """The setup.py for unirobot."""
+
 import json
 
 from pkg_resources import parse_requirements
 from setuptools import find_packages
 from setuptools import setup
-
 
 # Parse content from `README.md` as long description.
 with open("README.md", encoding="utf-8") as fh:
@@ -13,8 +13,7 @@ with open("README.md", encoding="utf-8") as fh:
 
 # Parse content from `requirements.txt` as install requires.
 with open("requirements.txt", encoding="utf-8") as fh:
-    install_requires = [str(requirement)
-                        for requirement in parse_requirements(fh)]
+    install_requires = [str(requirement) for requirement in parse_requirements(fh)]
 
 # Load all slot obj.
 # with open("slot_entry.json", encoding="utf-8") as fh:
@@ -30,9 +29,9 @@ setup(
         "Programming Language :: Python :: 3.8",
     ],
     description="RLink is a lightweight, high-performance communication layer specifically designed for distributed reinforcement learning systems.",
-    entry_points={"console_scripts": [
-        "rlink=rlink.cli:cli"
-    ], },
+    entry_points={
+        "console_scripts": ["rlink=rlink.cli:cli"],
+    },
     install_requires=install_requires,
     license="Apache License 2.0",
     long_description=long_description,

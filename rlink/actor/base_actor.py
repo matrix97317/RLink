@@ -86,8 +86,7 @@ class RLinkActor:
             asyncio.set_event_loop(loop)
 
             # 异步创建端点
-            endpoints = loop.run_until_complete(
-                self._create_ucxx_endpoints_async())
+            endpoints = loop.run_until_complete(self._create_ucxx_endpoints_async())
             loop.close()
 
             self.data_end_points = endpoints
@@ -95,8 +94,7 @@ class RLinkActor:
             print(f"Initialized {len(endpoints)} UCXX endpoints")
 
         except Exception as e:
-            print(
-                f"Failed to initialize UCXX endpoints: {e}. Will use HTTP only.")
+            print(f"Failed to initialize UCXX endpoints: {e}. Will use HTTP only.")
             self.data_end_points = []
             self._enable_ucxx = False
 
@@ -112,8 +110,7 @@ class RLinkActor:
                 endpoint = await ucxx.create_endpoint(host, self._data_port)
                 if endpoint:
                     endpoints.append((endpoint, host))
-                    print(
-                        f"✓ UCXX endpoint created for {host}:{self._data_port}")
+                    print(f"✓ UCXX endpoint created for {host}:{self._data_port}")
                 else:
                     print(
                         f"✗ Failed to create UCXX endpoint for {host}:{self._data_port}"
@@ -206,7 +203,8 @@ class RLinkActor:
             return False
 
     def _download_model_from_learner(
-        self, url: str,
+        self,
+        url: str,
     ):
         """从learner下载远程模型"""
         download_url = f"{url}/get_remote_model"
@@ -214,11 +212,13 @@ class RLinkActor:
         # 使用流式下载
         start_time = time.time()
         packed_data = self.packer.pack({"actor_id": self.actor_id})
-        response = requests.post(download_url,
-                                 data=packed_data,
-                                 headers={
-                                     "Content-Type": "application/msgpack"},
-                                 timeout=30, stream=True)
+        response = requests.post(
+            download_url,
+            data=packed_data,
+            headers={"Content-Type": "application/msgpack"},
+            timeout=30,
+            stream=True,
+        )
 
         if response.status_code == 200:
             total_size = int(response.headers.get("content-length", 0))

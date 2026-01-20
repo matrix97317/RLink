@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """Command Line Interface for RLink."""
+
 import click
 
 from rlink.learner import RLinkLearner
@@ -50,5 +51,6 @@ def learner(
         data_port=data_port,
         data_callback=None,
         gpu_num=gpu_num,
-        enable_ucxx=True)
+        enable_ucxx=True,
+    )
     rl_learner.serve_forever()

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """RLink torch loader Tests."""
+
 import mmap
 import time
 
@@ -12,7 +13,7 @@ from rlink.dataset import RLinkDataset
 
 
 def test_torch_loader():
-    """ Test RLink Torch DataLoader."""
+    """Test RLink Torch DataLoader."""
     dataset = RLinkDataset(gpu_id=0)
     # dataloader = DataLoader(dataset, batch_size=2, shuffle=True)
     for i in range(16):
