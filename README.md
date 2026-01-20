@@ -40,53 +40,65 @@ Building distributed RL systems often involves complex communication infrastruct
 │                 │     │     Layer       │     │                 │
 └─────────────────┘     └─────────────────┘     └─────────────────┘
 ```
+<div align="center">
+    <img src="./assets/arch.png" alt="arch" width="700"/>
+</div>
+
 
 ### 🚀 Quick Start
 
 Installation
 ```
-bash
 pip install rlink
 ```
 Basic Usage
 
+As a actor
 ```python
-import rlink
+from rlink.actor import RLinkActor
 
-# Initialize a learner node
-learner = rlink.LearnerNode(port=5555)
+actor = RLinkActor("http://learner-ip:8443")
 
-# Initialize actor nodes
-actor = rlink.ActorNode(learner_address="localhost:5555")
+# Send data to learner.
+data = {
+        "image_0": np.random.randint(0, 255, (480, 640, 3), dtype=np.uint8),
+        "action": np.random.randint((50, 14)).astype(np.float32),
+        "index": 0,
+}
 
-# Send trajectories from actor to learner
-trajectory = {"obs": [...], "actions": [...], "rewards": [...]}
-actor.send_trajectory(trajectory)
+for i in range(4):
+    data["index"] = i
+    actor.put(data)
 
-# Receive and process in learner
-data = learner.receive()
+# Get model from learner.
+models = actor.get_remote_model()
+
 ```
 
-### 🔧 Advanced Configuration
+As as Learner
 
-Scaling Actors
+```bash
+# To start the leaner, you can either run it directly in a terminal or daemonize it to run in the background.
+rlink learner --gpu-num 8 --port 8443
 
-```python
-# Multiple actors connecting to a single learner
-actor1 = rlink.ActorNode(learner_address="localhost:5555")
-actor2 = rlink.ActorNode(learner_address="localhost:5555")
-actor3 = rlink.ActorNode(learner_address="localhost:5555")
+rlink learner --help
 ```
 
-Reliable Mode
+```python
+from rlink.dataset import RLinkDataset
+
+class YourDataset:
+    def __init__(self):
+        self._rl_dataset = RLinkDataset(gpu_id=torch.cuda.current_device())
+
+    def __getitem__(self,idx):
+        data = self._rl_dataset.__getitem__(idx)
+```
 
 ```python
-# Enable fault-tolerant communication
-learner = rlink.LearnerNode(
-    port=5555,
-    reliable=True,
-    retry_attempts=3
-)
+from rlink.learner import RLinkSyncModel
+
+RLinkSyncModel.sync("your model path")
 ```
 
 ### 📚 Use Cases

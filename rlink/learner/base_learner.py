@@ -3,6 +3,7 @@
 
 import asyncio
 import time
+import os
 import traceback
 import io
 from typing import Dict, Any, Optional, Callable, List
@@ -15,20 +16,44 @@ import numpy as np
 from fastapi import FastAPI, Body, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi import HTTPException, Response
 
 from rlink.utils.msgpack_numpy import Packer, unpackb
+from rlink.utils.named_share_mem import NamedShareMemQueue
+from rlink.learner.sync_model import RLinkSyncModel
 
 
-async def actor_data_callback(ep):
-    """处理来自actor的数据
+class RLinkShareBuffer:
+    """RLink Shared Buffer Base Class."""
 
-    Args:
-        ep (_type_): UCXX端点
-    """
-    obj = await ep.recv_obj()
-    print(f"================?Received object from actor: {len(obj)}")
-    await ep.send_obj(obj)
-    # sys.exit(-1)
+    def __init__(self, gpu_num: int = 1):
+        self._buffer_obj = []
+        self._gpu_num = gpu_num
+        self._gpu_round_robin_cnt = 0
+        self._packer = Packer()
+        # create buffer for each gpu
+        for i in range(gpu_num):
+            shm_queue = NamedShareMemQueue(
+                gpu_id=i,
+                create=True,
+            )
+            self._buffer_obj.append(shm_queue)
+
+    async def actor_data_callback(self, ep):
+        """Actor data callback function."""
+        current_gpu_id = self._gpu_round_robin_cnt % self._gpu_num
+        self._gpu_round_robin_cnt += 1
+        obj = await ep.recv_obj()
+        print(
+            f"====== GPU ID: {current_gpu_id} Received object from actor: {len(obj)}")
+        self._buffer_obj[current_gpu_id].put(obj)
+        ret_info = {
+            "gpu_id": current_gpu_id,
+            "timestamp": time.time(),
+            "receive_bytes": len(obj),
+        }
+        await ep.send_obj(self._packer.pack(ret_info))
+        # sys.exit(-1)
 
 
 class RLinkLearner:
@@ -40,8 +65,8 @@ class RLinkLearner:
         port: int = 8443,
         data_port: int = 13338,
         data_callback: Optional[Callable] = None,
+        gpu_num: int = 1,
         enable_ucxx: bool = True,
-        max_queue_size: int = 1000,
     ) -> None:
         """初始化RLink Learner
 
@@ -50,14 +75,13 @@ class RLinkLearner:
             port: HTTP服务器端口
             data_port: UCXX数据服务器端口
             data_callback: 数据处理回调函数
+            gpu_num: GPU数量
             enable_ucxx: 是否启用UCXX服务器
-            max_queue_size: 数据队列最大大小
         """
         self._host = host
         self._port = port
         self._data_port = data_port
         self._enable_ucxx = enable_ucxx
-        self._max_queue_size = max_queue_size
 
         # 数据处理器
         self._packer = Packer()
@@ -73,8 +97,13 @@ class RLinkLearner:
         self._loop = None
         self._executor = ThreadPoolExecutor(max_workers=3)
 
+        # UCXX数据处理回调
+        self._rlink_share_buffer = RLinkShareBuffer(gpu_num=gpu_num)
+
         # 启动标志
         self._running = False
+
+        RLinkSyncModel.read_release()
 
     def __enter__(self):
         return self
@@ -135,7 +164,7 @@ class RLinkLearner:
         try:
             # 创建UCXX监听器
             self._learner_data_server = ucxx.create_listener(
-                actor_data_callback, self._data_port
+                self._rlink_share_buffer.actor_data_callback, self._data_port
             )
 
             print(f"✓ UCXX data server started on port {self._data_port}")
@@ -170,6 +199,7 @@ class RLinkLearner:
                 "endpoints": {
                     "available": "/available",
                     "data_probe": "/data_probe",
+                    "get_remote_model": "/get_remote_model",
                     "docs": "/docs",
                 },
             }
@@ -184,6 +214,77 @@ class RLinkLearner:
                 "timestamp": time.time(),
             }
 
+        @app.post("/get_remote_model")
+        async def get_remote_model(data: bytes = Body(...)):
+            """下发 model ckpt."""
+            # step1: 检查 Model Learner 是否完成ckpt生产
+            obs = unpackb(data)
+            model_path = RLinkSyncModel.read()
+            print("[RLink] Actor  requests model ckpt:", model_path)
+
+            if model_path is None:
+                if obs.get("actor_id") in self._actor_info:
+                    if "ckpt_info" in self._actor_info[obs.get("actor_id")]:
+                        model_info = self._actor_info[obs.get(
+                            "actor_id")]["ckpt_info"]
+                        if model_info[1] == 1:  # not synced yet
+                            model_path = model_info[0]
+                            self._actor_info[obs.get("actor_id")]["ckpt_info"] = (
+                                model_path, 0)
+                        else:
+                            return Response(status_code=204)
+                    else:
+                        self._actor_info[obs.get(
+                            "actor_id")]["ckpt_info"] = (None, -1)
+                        return Response(status_code=204)
+                else:
+                    self._actor_info[obs.get("actor_id")] = {}
+                    self._actor_info[obs.get(
+                        "actor_id")]["ckpt_info"] = (None, -1)
+                    return Response(status_code=204)
+            else:
+                # sync all actors ckpt has been ready
+                print("[RLink] New ckpt is ready for sync:", model_path)
+                for actor_id in self._actor_info:
+                    self._actor_info[actor_id]["ckpt_info"] = (model_path, 1)
+
+            # step2: 检查ckpt 是否存在
+            ckpt_path = model_path
+            if not os.path.exists(ckpt_path):
+                raise HTTPException(status_code=404, detail="File not found")
+
+            file_size = os.path.getsize(ckpt_path)
+
+            def read_file_chunks():
+                with open(ckpt_path, "rb") as f:
+                    while True:
+                        chunk = f.read(8 * 1024 * 1024)
+                        if not chunk:
+                            break
+                        yield chunk
+
+            # 在单独的线程中执行文件读取
+            loop = asyncio.get_event_loop()
+            with ThreadPoolExecutor() as executor:
+                chunks = await loop.run_in_executor(executor, lambda: list(read_file_chunks()))
+
+            async def async_chunk_generator():
+                for chunk in chunks:
+                    yield chunk
+
+            response = StreamingResponse(
+                async_chunk_generator(),
+                media_type="application/octet-stream",
+                headers={
+                    "Content-Disposition": f"attachment; filename={ckpt_path}",
+                    "Content-Length": str(file_size),
+                    "Accept-Ranges": "bytes",
+                },
+            )
+            # step3: 下发ckpt 完成
+            RLinkSyncModel.read_release()
+            return response
+
         @app.post("/data_probe")
         async def data_probe(data: bytes = Body(...)):
             """处理数据探测请求"""
@@ -195,7 +296,23 @@ class RLinkLearner:
                 actor_id = obs.get("actor_id", "unknown_actor")
                 data_size = obs.get("data_size", 0)
 
-                print(f"Data probe from actor {actor_id}, size: {data_size} bytes")
+                print(
+                    f"Data probe from actor {actor_id}, size: {data_size} bytes")
+                ret_status = "success"
+                error_info = "0"
+                if actor_id in self._actor_info:
+                    last_probe = self._actor_info[actor_id]["last_probe"]
+                    print(
+                        f"  - Last probe at {last_probe}, "
+                        f"interval: {request_time - last_probe:.2f} seconds"
+                    )
+                    if data_size != self._actor_info[actor_id]["data_size"]:
+                        print(
+                            f"  - Data size changed from "
+                            f"{self._actor_info[actor_id]['data_size']} to {data_size} bytes"
+                        )
+                        ret_status = "failure"
+                        error_info = "data_size_mismatch"
 
                 # 更新actor信息
                 self._actor_info[actor_id] = {
@@ -209,8 +326,9 @@ class RLinkLearner:
 
                 # 准备响应
                 response_data = {
-                    "status": "success",
+                    "status": ret_status,
                     "data_size": data_size,
+                    "error": error_info,
                     "actor_id": actor_id,
                     "timestamp": request_time,
                     "ucxx_enabled": self._enable_ucxx,
@@ -222,7 +340,8 @@ class RLinkLearner:
                 return StreamingResponse(
                     io.BytesIO(packed_response),
                     media_type="application/msgpack",
-                    headers={"X-Actor-ID": actor_id, "X-Timestamp": str(request_time)},
+                    headers={"X-Actor-ID": actor_id,
+                             "X-Timestamp": str(request_time)},
                 )
 
             except Exception as e:
@@ -281,7 +400,8 @@ class RLinkLearner:
 
                 # 启动UCXX服务器
                 if self._enable_ucxx:
-                    tasks.append(self._loop.create_task(self._start_ucxx_server()))
+                    tasks.append(self._loop.create_task(
+                        self._start_ucxx_server()))
                 # 运行所有任务
                 self._loop.run_until_complete(asyncio.gather(*tasks))
 

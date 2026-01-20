@@ -7,6 +7,8 @@ from typing import List
 from typing import Dict
 from typing import Any
 import asyncio
+import time
+import sys
 import concurrent.futures
 from threading import Lock
 
@@ -84,7 +86,8 @@ class RLinkActor:
             asyncio.set_event_loop(loop)
 
             # 异步创建端点
-            endpoints = loop.run_until_complete(self._create_ucxx_endpoints_async())
+            endpoints = loop.run_until_complete(
+                self._create_ucxx_endpoints_async())
             loop.close()
 
             self.data_end_points = endpoints
@@ -92,7 +95,8 @@ class RLinkActor:
             print(f"Initialized {len(endpoints)} UCXX endpoints")
 
         except Exception as e:
-            print(f"Failed to initialize UCXX endpoints: {e}. Will use HTTP only.")
+            print(
+                f"Failed to initialize UCXX endpoints: {e}. Will use HTTP only.")
             self.data_end_points = []
             self._enable_ucxx = False
 
@@ -108,7 +112,8 @@ class RLinkActor:
                 endpoint = await ucxx.create_endpoint(host, self._data_port)
                 if endpoint:
                     endpoints.append((endpoint, host))
-                    print(f"✓ UCXX endpoint created for {host}:{self._data_port}")
+                    print(
+                        f"✓ UCXX endpoint created for {host}:{self._data_port}")
                 else:
                     print(
                         f"✗ Failed to create UCXX endpoint for {host}:{self._data_port}"
@@ -200,6 +205,57 @@ class RLinkActor:
             print(f"UCXX send error: {e}")
             return False
 
+    def _download_model_from_learner(
+        self, url: str,
+    ):
+        """从learner下载远程模型"""
+        download_url = f"{url}/get_remote_model"
+        ip = url.split("//")[1].split(":")[0]
+        # 使用流式下载
+        start_time = time.time()
+        packed_data = self.packer.pack({"actor_id": self.actor_id})
+        response = requests.post(download_url,
+                                 data=packed_data,
+                                 headers={
+                                     "Content-Type": "application/msgpack"},
+                                 timeout=30, stream=True)
+
+        if response.status_code == 200:
+            total_size = int(response.headers.get("content-length", 0))
+            downloaded_size = 0
+            with open(f"remote_{ip}_model.pt", "wb") as f:
+                # 8MB chunks
+                for chunk in response.iter_content(chunk_size=8192 * 1024):
+                    if chunk:
+                        f.write(chunk)
+                        downloaded_size += len(chunk)
+                        progress = (downloaded_size / total_size) * 100
+                        print(f"Download progress: {progress:.2f}%")
+            download_time = time.time() - start_time
+            print(f"Download completed in {download_time:.2f} seconds")
+            return f"remote_{ip}_model.pt"
+        if response.status_code == 204:
+            print("=============> remote model is not ready now....")
+            return None
+
+        print(f"Download failed with status code: {response.status_code}")
+        return None
+
+    def get_remote_model(
+        self,
+    ):
+        """从learner下载远程模型"""
+        remote_model_paths = []
+        for url in self.learner_urls:
+            print(f"Downloading model from learner at {url}...")
+            model_path = self._download_model_from_learner(url)
+            if model_path is not None:
+                remote_model_paths.append(model_path)
+                print(f"Model downloaded and saved to {model_path}")
+            else:
+                print(f"No model downloaded from {url}")
+        return remote_model_paths
+
     def close(self):
         """关闭所有连接"""
         print(f"Closing RLink Actor {self.actor_id}...")
@@ -222,15 +278,7 @@ class RLinkActor:
     def put(self, data: dict):
         """Put data to learner."""
         packed_data = self.packer.pack(data)
-        data["data_size"] = len(packed_data)
-        data["actor_id"] = self.actor_id
         if self._use_data_probe:
-            for url in self.learner_urls:
-                probe_response = self._data_probe(data, url)
-                if probe_response["status"] != "success":
-                    raise InitWithExitError(f"{url} Data probe failed.")
-            self._use_data_probe = False
-        else:
             data_info = {}
             data_info["data_size"] = len(packed_data)
             data_info["actor_id"] = self.actor_id
@@ -238,6 +286,7 @@ class RLinkActor:
                 probe_response = self._data_probe(data_info, url)
                 if probe_response["status"] != "success":
                     raise InitWithExitError(f"{url} Data probe failed.")
+            # self._use_data_probe = False
 
         if self._ucxx_initialized:
             send_result = self._send_via_ucxx_sync(packed_data)
