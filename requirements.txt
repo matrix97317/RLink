@@ -1,0 +1,22 @@
+# Requirements for runtime only.
+addict
+click
+coloredlogs
+importlib-metadata
+numpy==1.25
+prettytable
+pydantic
+pydantic-settings
+pynvml
+setuptools-scm
+tabulate
+torch
+tqdm
+h5py
+msgpack==1.1.2
+fastapi==0.128.0
+types-requests==2.32.4.20260107
+uvicorn==0.40.0
+requests==2.32.5
+posix_ipc==1.3.2
+ucxx==0.47.0
