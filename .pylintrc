@@ -71,7 +71,11 @@ disable=c-extension-no-member,
         unknown-option-value,
         too-many-statements,
         import-error,
-        too-many-branches
+        too-many-branches,
+        too-few-public-methods,
+        unspecified-encoding,
+        raise-missing-from,
+        consider-using-dict-items
 
 
 
