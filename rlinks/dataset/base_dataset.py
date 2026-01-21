@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-from rlink.utils.named_share_mem import NamedShareMemQueue
+from rlinks.utils.named_share_mem import NamedShareMemQueue
 
 
 class RLinkDataset(Dataset):
@@ -14,7 +14,8 @@ class RLinkDataset(Dataset):
     def __init__(self, gpu_id: int = 0):
         """Initialize RLink Dataset."""
         self.gpu_id = gpu_id
-        self._share_mem_queue = NamedShareMemQueue(gpu_id=self.gpu_id, create=False)
+        self._share_mem_queue = NamedShareMemQueue(
+            gpu_id=self.gpu_id, create=False)
         self._data_cache = []
         self._data_cache_size = 1000  # cache size
         self._data_cache_index = 0
@@ -32,7 +33,8 @@ class RLinkDataset(Dataset):
             if len(self._data_cache) < self._data_cache_size:
                 self._data_cache.append(data)
             else:
-                self._data_cache[self._data_cache_index % self._data_cache_size] = data
+                self._data_cache[self._data_cache_index %
+                                 self._data_cache_size] = data
             self._data_cache_index += 1
             return data
         except Exception as e:

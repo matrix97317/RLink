@@ -13,7 +13,8 @@ with open("README.md", encoding="utf-8") as fh:
 
 # Parse content from `requirements.txt` as install requires.
 with open("requirements.txt", encoding="utf-8") as fh:
-    install_requires = [str(requirement) for requirement in parse_requirements(fh)]
+    install_requires = [str(requirement)
+                        for requirement in parse_requirements(fh)]
 
 # Load all slot obj.
 # with open("slot_entry.json", encoding="utf-8") as fh:
@@ -30,13 +31,13 @@ setup(
     ],
     description="RLink is a lightweight, high-performance communication layer specifically designed for distributed reinforcement learning systems.",
     entry_points={
-        "console_scripts": ["rlink=rlink.cli:cli"],
+        "console_scripts": ["rlinks=rlinks.cli:cli"],
     },
     install_requires=install_requires,
     license="Apache License 2.0",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    name="rlink",
+    name="rlinks",
     packages=find_packages(exclude=["dist.*", "dist", "tests.*", "tests"]),
     python_requires=">=3.8",
     url="https://github.com/matrix97317/RLink.git",

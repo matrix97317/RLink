@@ -2,8 +2,8 @@
 """RLink Learner Tests."""
 
 from typing import Any, Dict
-from rlink.learner import RLinkLearner
-from rlink.learner import RLinkSyncModel
+from rlinks.learner import RLinkLearner
+from rlinks.learner import RLinkSyncModel
 
 
 def test_learner():

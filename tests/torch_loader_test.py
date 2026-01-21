@@ -9,7 +9,7 @@ import posix_ipc
 from torch.utils.data import Dataset
 from torch.utils.data import DataLoader
 
-from rlink.dataset import RLinkDataset
+from rlinks.dataset import RLinkDataset
 
 
 def test_torch_loader():
