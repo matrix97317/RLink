@@ -5,6 +5,8 @@ CI=false
 PIPRUN := pipenv run
 PKGDIR := rlinks
 export PIPENV_VENV_IN_PROJECT=1
+export TWINE_USERNAME=__token__
+export TWINE_PASSWORD=pypi-AgENdGVzdC5weXBpLm9yZwIkNjJhZjIyNWUtNjgxZi00MjkxLTg3MWItNjMxMGFjNzY2MGQxAAIqWzMsIjkzZWJiYWY0LWQ1MmEtNDZkZC1iN2U3LTNiMjZiNDZjOTYwNiJdAAAGIMjEgHyWagS8SZmDrpxov7m-ul0f24r4oXOPDPDS2L5L
 
 # Remove common intermediate files.
 clean:
