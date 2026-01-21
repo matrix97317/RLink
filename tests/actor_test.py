@@ -5,7 +5,7 @@ import time
 
 import numpy as np
 
-from rlink.actor import RLinkActor
+from rlinks.actor import RLinkActor
 
 
 def test_actor():

@@ -8,8 +8,8 @@ from typing import Optional, Any
 
 import posix_ipc
 
-from rlink.utils.exception import ValueWithExitError
-from rlink.utils.msgpack_numpy import unpackb
+from rlinks.utils.exception import ValueWithExitError
+from rlinks.utils.msgpack_numpy import unpackb
 
 
 class NamedShareMemQueue:

@@ -3,7 +3,7 @@
 
 import click
 
-from rlink.learner import RLinkLearner
+from rlinks.learner import RLinkLearner
 
 CONTEXT_SETTINGS = {
     "help_option_names": ["-h", "--help"],

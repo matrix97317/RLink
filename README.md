@@ -49,13 +49,13 @@ Building distributed RL systems often involves complex communication infrastruct
 
 Installation
 ```
-pip install rlink
+pip install rlinks
 ```
 Basic Usage
 
 As a actor
 ```python
-from rlink.actor import RLinkActor
+from rlinks.actor import RLinkActor
 
 actor = RLinkActor("http://learner-ip:8443")
 
@@ -79,13 +79,13 @@ As as Learner
 
 ```bash
 # To start the leaner, you can either run it directly in a terminal or daemonize it to run in the background.
-rlink learner --gpu-num 8 --port 8443
+rlinks learner --gpu-num 8 --port 8443
 
-rlink learner --help
+rlinks learner --help
 ```
 
 ```python
-from rlink.dataset import RLinkDataset
+from rlinks.dataset import RLinkDataset
 
 class YourDataset:
     def __init__(self):
@@ -96,7 +96,7 @@ class YourDataset:
 ```
 
 ```python
-from rlink.learner import RLinkSyncModel
+from rlinks.learner import RLinkSyncModel
 
 RLinkSyncModel.sync("your model path")
 ```

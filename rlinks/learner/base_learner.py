@@ -18,9 +18,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi import HTTPException, Response
 
-from rlink.utils.msgpack_numpy import Packer, unpackb
-from rlink.utils.named_share_mem import NamedShareMemQueue
-from rlink.learner.sync_model import RLinkSyncModel
+from rlinks.utils.msgpack_numpy import Packer, unpackb
+from rlinks.utils.named_share_mem import NamedShareMemQueue
+from rlinks.learner.sync_model import RLinkSyncModel
 
 
 class RLinkShareBuffer:

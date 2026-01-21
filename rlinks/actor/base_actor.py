@@ -15,11 +15,11 @@ from threading import Lock
 import requests
 import ucxx
 
-from rlink.utils.exception import InitWithExitError
-from rlink.utils.msgpack_numpy import Packer
-from rlink.utils.msgpack_numpy import unpackb
-from rlink.utils.tools import is_valid_ip
-from rlink.utils.tools import get_ip_based_uuid_v3
+from rlinks.utils.exception import InitWithExitError
+from rlinks.utils.msgpack_numpy import Packer
+from rlinks.utils.msgpack_numpy import unpackb
+from rlinks.utils.tools import is_valid_ip
+from rlinks.utils.tools import get_ip_based_uuid_v3
 
 
 class RLinkActor:

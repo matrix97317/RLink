@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import Dataset
 
 
-from rlink.utils.named_share_mem import NamedShareMemQueue
+from rlinks.utils.named_share_mem import NamedShareMemQueue
 
 
 class RLinkDataset(Dataset):
