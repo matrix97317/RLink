@@ -13,8 +13,7 @@ with open("README.md", encoding="utf-8") as fh:
 
 # Parse content from `requirements.txt` as install requires.
 with open("requirements.txt", encoding="utf-8") as fh:
-    install_requires = [str(requirement)
-                        for requirement in parse_requirements(fh)]
+    install_requires = [str(requirement) for requirement in parse_requirements(fh)]
 
 # Load all slot obj.
 # with open("slot_entry.json", encoding="utf-8") as fh:

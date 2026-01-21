@@ -44,8 +44,7 @@ class RLinkShareBuffer:
         current_gpu_id = self._gpu_round_robin_cnt % self._gpu_num
         self._gpu_round_robin_cnt += 1
         obj = await ep.recv_obj()
-        print(
-            f"====== GPU ID: {current_gpu_id} Received object from actor: {len(obj)}")
+        print(f"====== GPU ID: {current_gpu_id} Received object from actor: {len(obj)}")
         self._buffer_obj[current_gpu_id].put(obj)
         ret_info = {
             "gpu_id": current_gpu_id,
@@ -225,8 +224,7 @@ class RLinkLearner:
             if model_path is None:
                 if obs.get("actor_id") in self._actor_info:
                     if "ckpt_info" in self._actor_info[obs.get("actor_id")]:
-                        model_info = self._actor_info[obs.get(
-                            "actor_id")]["ckpt_info"]
+                        model_info = self._actor_info[obs.get("actor_id")]["ckpt_info"]
                         if model_info[1] == 1:  # not synced yet
                             model_path = model_info[0]
                             self._actor_info[obs.get("actor_id")]["ckpt_info"] = (
@@ -236,13 +234,11 @@ class RLinkLearner:
                         else:
                             return Response(status_code=204)
                     else:
-                        self._actor_info[obs.get(
-                            "actor_id")]["ckpt_info"] = (None, -1)
+                        self._actor_info[obs.get("actor_id")]["ckpt_info"] = (None, -1)
                         return Response(status_code=204)
                 else:
                     self._actor_info[obs.get("actor_id")] = {}
-                    self._actor_info[obs.get(
-                        "actor_id")]["ckpt_info"] = (None, -1)
+                    self._actor_info[obs.get("actor_id")]["ckpt_info"] = (None, -1)
                     return Response(status_code=204)
             else:
                 # sync all actors ckpt has been ready
@@ -300,8 +296,7 @@ class RLinkLearner:
                 actor_id = obs.get("actor_id", "unknown_actor")
                 data_size = obs.get("data_size", 0)
 
-                print(
-                    f"Data probe from actor {actor_id}, size: {data_size} bytes")
+                print(f"Data probe from actor {actor_id}, size: {data_size} bytes")
                 ret_status = "success"
                 error_info = "0"
                 if actor_id in self._actor_info:
@@ -344,8 +339,7 @@ class RLinkLearner:
                 return StreamingResponse(
                     io.BytesIO(packed_response),
                     media_type="application/msgpack",
-                    headers={"X-Actor-ID": actor_id,
-                             "X-Timestamp": str(request_time)},
+                    headers={"X-Actor-ID": actor_id, "X-Timestamp": str(request_time)},
                 )
 
             except Exception as e:
@@ -404,8 +398,7 @@ class RLinkLearner:
 
                 # 启动UCXX服务器
                 if self._enable_ucxx:
-                    tasks.append(self._loop.create_task(
-                        self._start_ucxx_server()))
+                    tasks.append(self._loop.create_task(self._start_ucxx_server()))
                 # 运行所有任务
                 self._loop.run_until_complete(asyncio.gather(*tasks))
 

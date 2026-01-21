@@ -3,7 +3,7 @@
 # Use pipenv when not in CI environment and pipenv command exists.
 CI=false
 PIPRUN := pipenv run
-PKGDIR := rlink
+PKGDIR := rlinks
 export PIPENV_VENV_IN_PROJECT=1
 
 # Remove common intermediate files.

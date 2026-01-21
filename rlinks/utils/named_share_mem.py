@@ -206,7 +206,7 @@ class NamedShareMemQueue:
                 self.mapped_data.write(serialized_data)
 
                 # Ensure we write exactly the data size
-                self.mapped_data_size[offset_size: offset_size + 4] = struct.pack(
+                self.mapped_data_size[offset_size : offset_size + 4] = struct.pack(
                     "I", len(serialized_data)
                 )
 
@@ -253,7 +253,7 @@ class NamedShareMemQueue:
 
             # 2. Read data size
             offset_size = actual_idx * self.data_size_slot_size
-            size_data = self.mapped_data_size[offset_size: offset_size + 4]
+            size_data = self.mapped_data_size[offset_size : offset_size + 4]
             data_size = struct.unpack("I", size_data)[0]
             # 3. Read data
             offset_data = actual_idx * self.data_slot_size
@@ -295,8 +295,7 @@ class NamedShareMemQueue:
                     posix_ipc.unlink_semaphore(name)
             except Exception as e:
                 # Log but don't raise during cleanup
-                print(
-                    f"Warning: Failed to unlink {resource_type} {name}: {str(e)}")
+                print(f"Warning: Failed to unlink {resource_type} {name}: {str(e)}")
         self._created_resources.clear()
 
     def __len__(self):
